@@ -7,21 +7,26 @@ chrome.action.onClicked.addListener(async () => {
   );
 
   if (existingDashboardWindow) {
-    // Force it un-minimized if it was hidden, and bring it to front
-    chrome.windows.update(existingDashboardWindow.id, { 
+    // Bring to front, un-minimize, and reinforce PIN on top
+    await chrome.windows.update(existingDashboardWindow.id, { 
       state: "normal", 
-      focused: true 
+      focused: true,
+      alwaysOnTop: true 
     });
     return;
   }
 
-  // Create a clean standalone dashboard panel that stays pinned on top
-  chrome.windows.create({
+  // 1. Create the base standalone window structure
+  const newWindow = await chrome.windows.create({
     url: "dashboard.html",
     type: "popup",
     width: 380,
     height: 450,
-    focused: true,
-    alwaysOnTop: true // <-- Keeps panel pinned on top of desktop apps
+    focused: true
   });
+
+  // 2. Explicitly bind the alwaysOnTop property to the active runtime ID
+  if (newWindow && newWindow.id) {
+    await chrome.windows.update(newWindow.id, { alwaysOnTop: true });
+  }
 });

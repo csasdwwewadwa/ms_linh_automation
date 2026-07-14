@@ -81,10 +81,17 @@ async function isTargetWindowMinimized(tabId) {
 async function forceRestoreDashboardWindow() {
   try {
     const currentWin = await chrome.windows.getCurrent();
-    // Setting state to "normal" expands it if it was minimized
-    await chrome.windows.update(currentWin.id, { state: "normal", focused: true }); //
+    if (!currentWin || !currentWin.id) return;
+
+    // Apply the ultimate un-minimize hierarchy sequence
+    await chrome.windows.update(currentWin.id, { 
+      state: "normal",       // Forces it out of the taskbar/minimize status
+      focused: true,        // Snaps window focus
+      alwaysOnTop: true,    // Re-locks layout to top layer of display screen
+      drawAttention: true   // Flashes OS taskbar red/orange until interacted with
+    });
   } catch (err) {
-    console.error("Failed to restore dashboard window:", err);
+    console.error("Failed to aggressively restore dashboard window:", err);
   }
 }
 

@@ -1,0 +1,37 @@
+{
+  "manifest_version": 3,
+  "name": "MISA Automation Extension",
+  "version": "1.0",
+  "description": "これが読めたらゲイになる",
+  "permissions": [
+    "tabs",
+    "scripting",
+    "activeTab",
+    "windows",
+    "alwaysOnTopWindows"
+  ],
+  "host_permissions": [
+    "https://actasp.misa.vn/*",
+    "https://*.misa.vn/*"
+  ],
+  "action": {},
+  "background": {
+    "service_worker": "background.js"
+  },
+  "content_scripts": [
+    {
+      "matches": [
+        "https://actasp.misa.vn/*",
+        "https://*.misa.vn/*"
+      ],
+      "js": ["content.js"],
+      "run_at": "document_start"
+    }
+  ],
+  "web_accessible_resources": [
+    {
+      "resources": ["skip_warning.json"],
+      "matches": ["https://actasp.misa.vn/*"]
+    }
+  ]
+}

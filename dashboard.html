@@ -1,0 +1,152 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <style>
+    :root {
+      --bg-color: #1e1e24;
+      --panel-bg: #2a2a35;
+      --text-color: #f3f4f6;
+      --text-muted: #9ca3af;
+      --primary: #2563eb;
+      --primary-hover: #1d4ed8;
+      --danger: #dc2626;
+      --danger-hover: #b91c1c;
+      --status-bg: #374151;
+    }
+
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+      margin: 0;
+      padding: 16px;
+      background-color: var(--bg-color);
+      color: var(--text-color);
+      display: flex;
+      flex-direction: column;
+      height: 100vh;
+      box-sizing: border-box;
+    }
+
+    h3 {
+      margin: 0 0 4px 0;
+      font-size: 16px;
+      font-weight: 600;
+      letter-spacing: -0.5px;
+    }
+
+    .subtitle {
+      font-size: 12px;
+      color: var(--text-muted);
+      margin-bottom: 16px;
+    }
+
+    .control-panel {
+      background: var(--panel-bg);
+      padding: 12px;
+      border-radius: 8px;
+      box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.3);
+      margin-bottom: 12px;
+    }
+
+    button {
+      width: 100%;
+      padding: 12px;
+      font-size: 14px;
+      font-weight: 600;
+      background-color: var(--primary);
+      color: white;
+      border: none;
+      border-radius: 6px;
+      cursor: pointer;
+      transition: background-color 0.15s ease, transform 0.1s ease;
+    }
+
+    button:hover {
+      background-color: var(--primary-hover);
+    }
+
+    button:active {
+      transform: scale(0.98);
+    }
+
+    button.stop-state {
+      background-color: var(--danger);
+    }
+
+    button.stop-state:hover {
+      background-color: var(--danger-hover);
+    }
+
+    .counter-card {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-top: 12px;
+      font-size: 13px;
+      color: var(--text-muted);
+    }
+
+    #cycleCounter {
+      font-weight: 700;
+      color: #38bdf8;
+      background: rgba(56, 189, 248, 0.1);
+      padding: 2px 8px;
+      border-radius: 12px;
+    }
+
+    #status {
+      flex-grow: 1;
+      padding: 12px;
+      background-color: var(--status-bg);
+      color: #e5e7eb;
+      border-radius: 6px;
+      font-size: 13px;
+      line-height: 1.5;
+      white-space: pre-wrap;
+      word-break: break-word;
+      overflow-y: auto;
+      border: 1px solid rgba(255, 255, 255, 0.05);
+      transition: background-color 0.2s ease, color 0.2s ease;
+    }
+
+    /* Error Banner State */
+    #status.error-state {
+      background-color: #7f1d1d !important;
+      color: #ffffff !important;
+      font-weight: 500;
+      border: 1px solid #b91c1c;
+    }
+
+    /* Success Termination State */
+    #status.success-state {
+      background-color: #064e3b !important;
+      color: #a7f3d0 !important;
+      font-weight: 500;
+      border: 1px solid #059669;
+    }
+
+    #status.warning-state {
+        background-color: #7c2d12 !important; /* Dark Amber/Orange */
+        color: #ffedd5 !important; /* Soft white/orange text */
+        font-weight: 500;
+        border: 1px solid #ea580c;
+    }
+  </style>
+</head>
+<body>
+  <h3>MISA Auto Controller</h3>
+  <div class="subtitle">Standalone Engine Console</div>
+
+  <div class="control-panel">
+    <button id="runAutomation">Start</button>
+    <div class="counter-card">
+      <span>Completed Cycles:</span>
+      <span id="cycleCounter">0</span>
+    </div>
+  </div>
+
+  <div id="status">Ready to process...</div>
+  
+  <script src="dashboard.js"></script>
+</body>
+</html>

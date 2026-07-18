@@ -2,6 +2,7 @@
 <html>
 <head>
   <meta charset="utf-8">
+  <title>MISA Auto Controller</title>
   <style>
     :root {
       --bg-color: #1e1e24;
@@ -77,6 +78,26 @@
       background-color: var(--danger-hover);
     }
 
+    .window-controls {
+      display: grid;
+      grid-template-columns: 1fr;
+      gap: 8px;
+      margin-top: 8px;
+    }
+
+    .secondary-button {
+      background-color: #4b5563;
+    }
+
+    .secondary-button:hover {
+      background-color: #374151;
+    }
+
+    .secondary-button:disabled {
+      cursor: not-allowed;
+      opacity: 0.55;
+    }
+
     .counter-card {
       display: flex;
       justify-content: space-between;
@@ -134,18 +155,21 @@
   </style>
 </head>
 <body>
-  <h3>MISA Auto Controller</h3>
-  <div class="subtitle">Standalone Engine Console</div>
+  <h3 data-i18n="app.title">MISA Auto Controller</h3>
+  <div class="subtitle" data-i18n="app.subtitle">Standalone Engine Console</div>
 
   <div class="control-panel">
-    <button id="runAutomation">Start</button>
+    <button id="runAutomation" data-i18n="button.start">Start</button>
+    <div class="window-controls">
+      <button id="toggleTargetWindow" class="secondary-button" data-i18n="button.hideTarget">Hide MISA window</button>
+    </div>
     <div class="counter-card">
-      <span>Completed Cycles:</span>
+      <span data-i18n="counter.label">Completed Cycles:</span>
       <span id="cycleCounter">0</span>
     </div>
   </div>
 
-  <div id="status">Ready to process...</div>
+  <div id="status" data-i18n="status.ready">Ready to process...</div>
   
   <script src="dashboard.js"></script>
 </body>

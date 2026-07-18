@@ -12,7 +12,8 @@
   ],
   "host_permissions": [
     "https://actasp.misa.vn/*",
-    "https://*.misa.vn/*"
+    "https://*.misa.vn/*",
+    "http://127.0.0.1/*"
   ],
   "action": {},
   "background": {
@@ -30,7 +31,7 @@
   ],
   "web_accessible_resources": [
     {
-      "resources": ["skip_warning.json"],
+      "resources": ["invoice_warning.json", "table_warning.json"],
       "matches": ["https://actasp.misa.vn/*"]
     }
   ]

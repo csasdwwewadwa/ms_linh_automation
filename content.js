@@ -1,40 +1,68 @@
 // content.js - Single instance content runner
 
-let settleObserver = null;
-let settleTimeout = null;
-
 function normalizeText(text) {
   return (text || "").replace(/\s+/g, " ").trim();
 }
 
-function waitForDOMToSettle(settleMs = 1000, maxTimeoutMs = 10000) {
+function waitForElementToSettle(element, settleMs = 1000, maxTimeoutMs = 10000) {
   return new Promise((resolve) => {
+    let settleTimeout = null;
+    let maxTimeout = null;
+    const settleObserver = new MutationObserver(resetSettleTimer);
+
     const cleanup = () => {
-      if (settleObserver) settleObserver.disconnect();
+      settleObserver.disconnect();
       if (settleTimeout) clearTimeout(settleTimeout);
+      if (maxTimeout) clearTimeout(maxTimeout);
     };
 
-    const resetSettleTimer = () => {
+    function resetSettleTimer() {
       if (settleTimeout) clearTimeout(settleTimeout);
       settleTimeout = setTimeout(() => {
         cleanup();
-        resolve({ success: true, message: `DOM went quiet for ${settleMs}ms.` });
+        resolve({ success: true, message: `Element went quiet for ${settleMs}ms.` });
       }, settleMs);
-    };
+    }
 
     resetSettleTimer();
-    settleObserver = new MutationObserver(resetSettleTimer);
-    settleObserver.observe(document.body, {
+    settleObserver.observe(element, {
       childList: true,
       subtree: true,
       attributes: true,
       characterData: true
     });
 
-    setTimeout(() => {
+    maxTimeout = setTimeout(() => {
       cleanup();
-      resolve({ success: true, message: "Settle timeout reached." });
+      resolve({ success: true, message: "Element settle timeout reached." });
     }, maxTimeoutMs);
+  });
+}
+
+function waitForDOMToSettle(settleMs = 1000, maxTimeoutMs = 10000) {
+  return waitForElementToSettle(document.body, settleMs, maxTimeoutMs);
+}
+
+function waitForFirstElementToSettle(selector, elementTimeoutMs, settleMs, maxTimeoutMs) {
+  return new Promise((resolve, reject) => {
+    const startedAt = Date.now();
+
+    function checkElement() {
+      const element = document.querySelector(selector);
+      if (element) {
+        waitForElementToSettle(element, settleMs, maxTimeoutMs).then(resolve);
+        return;
+      }
+
+      if (Date.now() - startedAt >= elementTimeoutMs) {
+        reject(new Error(`Timed out waiting for ${selector}.`));
+        return;
+      }
+
+      requestAnimationFrame(checkElement);
+    }
+
+    checkElement();
   });
 }
 
@@ -157,22 +185,45 @@ function pressCtrlQ() {
   return { success: true, message: "Dispatched return command." };
 }
 
-function confirmSkipWarningIfPresent(skipWarnings, targetUrlPrefix) {
-  if (window.location.href.startsWith(targetUrlPrefix)) {
-    return { success: true, redirected: true, message: "Navigated." };
-  }
+function warningTextMatches(warningText, configuredText) {
+  const normalizedPattern = normalizeText(configuredText).replace(/\*\*/g, "");
+  const escapedPattern = normalizedPattern.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+  const regexPattern = escapedPattern.replace(/<1>/g, "\\d+");
+  return new RegExp(`^${regexPattern}$`).test(warningText);
+}
 
+function checkWarningIfPresent(warnings, targetUrlPrefix) {
   const messageBox = document.querySelector(".con-ms-message-box");
-  if (!messageBox) return { success: true, redirected: false, foundWarning: false };
+  if (!messageBox) {
+    return {
+      success: true,
+      redirected: window.location.href.startsWith(targetUrlPrefix),
+      foundWarning: false
+    };
+  }
 
   const contentDiv = messageBox.querySelector(".message-content");
   const warningText = normalizeText(contentDiv ? contentDiv.textContent : "");
 
-  if (!warningText) return { success: true, redirected: false, foundWarning: false };
+  if (!warningText) {
+    return {
+      success: true,
+      redirected: window.location.href.startsWith(targetUrlPrefix),
+      foundWarning: false
+    };
+  }
 
-  const normalizedSkipWarnings = skipWarnings.map(w => normalizeText(w));
-  if (!normalizedSkipWarnings.includes(warningText)) {
+  const matchedWarning = warnings.find((warning) => warningTextMatches(warningText, warning.text));
+  if (!matchedWarning) {
     return { success: false, redirected: false, message: `Unexpected critical modal validation failure: "${warningText}"` };
+  }
+
+  if (matchedWarning.action === "reload") {
+    return { success: true, redirected: false, foundWarning: true, action: "reload", message: `Reload required for warning modal: ${warningText}` };
+  }
+
+  if (matchedWarning.action !== "confirm") {
+    return { success: false, redirected: false, message: `Unsupported warning action: "${matchedWarning.action}"` };
   }
 
   const footer = messageBox.querySelector(".mess-footer");
@@ -183,7 +234,7 @@ function confirmSkipWarningIfPresent(skipWarnings, targetUrlPrefix) {
   if (!yesButton) return { success: false, redirected: false, message: "Failed to identify validation clear button element." };
 
   yesButton.click();
-  return { success: true, redirected: false, foundWarning: true, message: `Handled warning modal: ${warningText}` };
+  return { success: true, redirected: false, foundWarning: true, action: "confirm", message: `Handled warning modal: ${warningText}` };
 }
 
 // Global Router Map Injection Intermediary
@@ -202,6 +253,15 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
           const settleRes = await waitForDOMToSettle(request.settleMs, request.maxTimeoutMs);
           sendResponse(settleRes);
           break;
+        case "waitForContentsLayoutToSettle":
+          const contentsLayoutResult = await waitForFirstElementToSettle(
+            ".contents-layout",
+            request.elementTimeoutMs,
+            request.settleMs,
+            request.maxTimeoutMs
+          );
+          sendResponse(contentsLayoutResult);
+          break;
         case "clickFirstUnpostedRowAction":
           sendResponse(clickFirstUnpostedRowAction());
           break;
@@ -218,8 +278,8 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
         case "pressCtrlQ":
           sendResponse(pressCtrlQ());
           break;
-        case "confirmSkipWarningIfPresent":
-          sendResponse(confirmSkipWarningIfPresent(request.skipWarnings, request.targetUrlPrefix));
+        case "checkWarningIfPresent":
+          sendResponse(checkWarningIfPresent(request.warnings, request.targetUrlPrefix));
           break;
         default:
           sendResponse({ success: false, message: "Unknown incoming query key designation." });

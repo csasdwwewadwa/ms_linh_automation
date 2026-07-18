@@ -1,0 +1,10 @@
+[
+  {
+    "text": "Có <1> hóa đơn đã được hạch toán. **Xem chi tiết**. Bạn có muốn đánh dấu hóa đơn đã hạch toán và tham chiếu tới chứng từ tương ứng không?",
+    "action": "reload"
+  },
+  {
+    "text": "Có <1> hóa đơn đã được hạch toán. Xem chi tiết. Bạn có muốn đánh dấu hóa đơn đã hạch toán và tham chiếu tới chứng từ tương ứng không?",
+    "action": "reload"
+  }
+]

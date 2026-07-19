@@ -83,7 +83,7 @@ function Send-Response($stream, [int]$statusCode, [hashtable]$payload) {
   $json = $payload | ConvertTo-Json -Compress
   $body = [System.Text.Encoding]::UTF8.GetBytes($json)
   $statusText = if ($statusCode -eq 200) { "OK" } else { "Error" }
-  $headers = "HTTP/1.1 $statusCode $statusText`r`nContent-Type: application/json; charset=utf-8`r`nContent-Length: $($body.Length)`r`nAccess-Control-Allow-Origin: *`r`nConnection: close`r`n`r`n"
+  $headers = "HTTP/1.1 $statusCode $statusText`r`nContent-Type: application/json; charset=utf-8`r`nContent-Length: $($body.Length)`r`nAccess-Control-Allow-Origin: *`r`nAccess-Control-Allow-Methods: GET, OPTIONS`r`nAccess-Control-Allow-Private-Network: true`r`nConnection: close`r`n`r`n"
   $headerBytes = [System.Text.Encoding]::ASCII.GetBytes($headers)
   $stream.Write($headerBytes, 0, $headerBytes.Length)
   $stream.Write($body, 0, $body.Length)
@@ -98,6 +98,11 @@ try {
       $reader = [System.IO.StreamReader]::new($stream, [System.Text.Encoding]::ASCII, $false, 1024, $true)
       $requestLine = $reader.ReadLine()
       while ($reader.ReadLine()) { }
+
+      if ($requestLine -match '^OPTIONS\s+') {
+        Send-Response $stream 200 @{ success = $true }
+        continue
+      }
 
       if (-not $requestLine -or $requestLine -notmatch '^GET\s+(\S+)\s+HTTP/') {
         Send-Response $stream 400 @{ success = $false; message = "Invalid request." }

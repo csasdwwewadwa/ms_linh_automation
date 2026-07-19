@@ -68,8 +68,21 @@ async function sendNativeWindowCommand(action) {
 
   const helperUrl = new URL(`http://127.0.0.1:${helperPort}/${action}`);
   helperUrl.searchParams.set("token", helperToken);
-  const response = await fetch(helperUrl);
-  const result = await response.json();
+  let response;
+  try {
+    response = await fetch(helperUrl);
+  } catch (error) {
+    throw new Error(
+      "Native window helper is unavailable. Relaunch the application with launch-misa.cmd, then try again."
+    );
+  }
+
+  let result;
+  try {
+    result = await response.json();
+  } catch (error) {
+    throw new Error("Native window helper returned an invalid response.");
+  }
   if (!response.ok || !result.success) {
     throw new Error(result.message || `Native window command failed: ${action}`);
   }

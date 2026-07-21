@@ -139,7 +139,7 @@ try {
           $restoreRect = $rect
           $width = $rect.Right - $rect.Left
           $height = $rect.Bottom - $rect.Top
-          $moved = [NativeWindowHelper]::SetWindowPos($targetHandle, [NativeWindowHelper]::Topmost, 100000, $rect.Top, $width, $height, [NativeWindowHelper]::NoActivate -bor [NativeWindowHelper]::Show)
+          $moved = [NativeWindowHelper]::SetWindowPos($targetHandle, [NativeWindowHelper]::Topmost, -1000, 100, 1009, 900, [NativeWindowHelper]::NoActivate -bor [NativeWindowHelper]::Show)
           if (-not $moved) {
             Send-Response $stream 500 @{ success = $false; message = "Win32 could not move the Chrome window." }
             continue
